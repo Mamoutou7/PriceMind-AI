@@ -33,7 +33,7 @@ jobs:
         run: mypy apps scripts
 
       - name: Run Bandit
-        run: bandit -c pyproject.toml -r apps scripts
+        run: bandit -c pyproject.toml -r .
 
       - name: Run tests
         run: pytest
