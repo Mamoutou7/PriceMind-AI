@@ -2,21 +2,23 @@ from __future__ import annotations
 
 import sqlite3
 
+from apps.storage_mcp.db.repositories.repository import Repository
 
-class ProviderRepository:
-    """Handles provider persistence."""
+
+class ProviderRepository(Repository):
+    """Handles provider persistence and lookup."""
 
     def __init__(self, connection: sqlite3.Connection) -> None:
-        self._connection = connection
+        super().__init__(connection)
 
     def get_or_create(self, provider_name: str) -> int:
         normalized_name = provider_name.strip().lower()
 
-        cursor = self._connection.execute(
+        row = self._connection.execute(
             "SELECT id FROM providers WHERE name = ?",
             (normalized_name,),
-        )
-        row = cursor.fetchone()
+        ).fetchone()
+
         if row is not None:
             return int(row["id"])
 
@@ -29,4 +31,4 @@ class ProviderRepository:
         if cursor.lastrowid is None:
             raise RuntimeError("Failed to insert provider.")
 
-        return cursor.lastrowid
+        return int(cursor.lastrowid)

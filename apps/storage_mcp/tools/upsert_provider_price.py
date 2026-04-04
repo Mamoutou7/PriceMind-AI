@@ -15,20 +15,29 @@ def upsert_provider_price_tool(
     output_price_per_1m: float | None,
     currency: str = "USD",
 ) -> dict:
-    provider_id = provider_repository.get_or_create(provider_name)
-    model_id = model_repository.get_or_create(model_name)
+    normalized_provider = provider_name.strip().lower()
+    normalized_model = ModelRepository.normalize_model_name(model_name)
+    normalized_currency = currency.strip().upper()
+
+    provider_id = provider_repository.get_or_create(normalized_provider)
+    model_id = model_repository.get_or_create(normalized_model)
 
     price_id = price_repository.upsert_price(
         provider_id=provider_id,
         model_id=model_id,
         input_price_per_1m=input_price_per_1m,
         output_price_per_1m=output_price_per_1m,
-        currency=currency,
+        currency=normalized_currency,
     )
 
     return {
         "success": True,
         "price_id": price_id,
-        "provider_name": provider_name,
-        "model_name": model_name,
+        "data": {
+            "provider_name": normalized_provider,
+            "model_name": normalized_model,
+            "input_price_per_1m": input_price_per_1m,
+            "output_price_per_1m": output_price_per_1m,
+            "currency": normalized_currency,
+        },
     }
