@@ -7,13 +7,10 @@ from urllib.parse import urlparse
 from apps.scraping_mcp.services.firecrawl_service import FirecrawlService
 from apps.scraping_mcp.services.metadata_service import MetadataService
 from apps.scraping_mcp.services.raw_document_service import RawDocumentService
+from core.providers import list_supported_providers
 
-ALLOWED_PROVIDERS = {
-    "cloudrift",
-    "deepinfra",
-    "fireworks",
-    "groq",
-}
+
+ALLOWED_PROVIDERS = set(list_supported_providers())
 
 
 class ScrapeService:
@@ -35,14 +32,15 @@ class ScrapeService:
         url: str,
         formats: list[str] | None = None,
     ) -> dict[str, Any]:
-        self._validate_provider(provider_name)
+        normalized_provider = provider_name.strip().lower()
+        self._validate_provider(normalized_provider)
 
         resolved_formats = formats or ["markdown", "html"]
         result = self._firecrawl_service.scrape(url=url, formats=resolved_formats)
 
         metadata = self._metadata_service.load()
         provider_metadata: dict[str, Any] = {
-            "provider_name": provider_name,
+            "provider_name": normalized_provider,
             "url": url,
             "domain": urlparse(url).netloc,
             "scraped_at": datetime.now(UTC).isoformat(),
@@ -60,7 +58,7 @@ class ScrapeService:
                     continue
 
                 file_path = self._raw_document_service.save(
-                    provider_name,
+                    normalized_provider,
                     format_name,
                     content,
                 )
@@ -78,10 +76,18 @@ class ScrapeService:
             )
             provider_metadata["success"] = True
 
-        metadata[provider_name] = provider_metadata
+        metadata[normalized_provider] = provider_metadata
         self._metadata_service.save(metadata)
 
-        return provider_metadata
+        response_payload = dict(provider_metadata)
+        response_payload.update(
+            {
+                format_name: result.get(format_name, "")
+                for format_name in resolved_formats
+                if result.get(format_name)
+            }
+        )
+        return response_payload
 
     @staticmethod
     def _validate_provider(provider_name: str) -> None:

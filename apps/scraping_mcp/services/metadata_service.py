@@ -4,23 +4,28 @@ import json
 from pathlib import Path
 from typing import Any
 
+from core.config import RAW_DATA_DIR
+
 
 class MetadataService:
-    """Reads and writes scraped metadata."""
+    """Manages scrape metadata persisted in a JSON file."""
 
-    def __init__(self, metadata_path: Path) -> None:
-        self.metadata_path = metadata_path
+    def __init__(self, metadata_path: Path | None = None) -> None:
+        self._metadata_path = metadata_path or (RAW_DATA_DIR / "scraped_metadata.json")
+        self._metadata_path.parent.mkdir(parents=True, exist_ok=True)
 
     def load(self) -> dict[str, Any]:
-        if not self.metadata_path.exists():
+        if not self._metadata_path.exists():
             return {}
 
-        with self.metadata_path.open("r", encoding="utf-8") as file:
-            data = json.load(file)
+        raw = json.loads(self._metadata_path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("Scrape metadata file must contain a JSON object.")
 
-        return data if isinstance(data, dict) else {}
+        return raw
 
     def save(self, metadata: dict[str, Any]) -> None:
-        self.metadata_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.metadata_path.open("w", encoding="utf-8") as file:
-            json.dump(metadata, file, indent=2, ensure_ascii=False)
+        self._metadata_path.write_text(
+            json.dumps(metadata, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )

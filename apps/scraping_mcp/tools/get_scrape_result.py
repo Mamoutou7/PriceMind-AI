@@ -1,21 +1,25 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
+from apps.scraping_mcp.services.metadata_service import MetadataService
 
-def get_scrape_result_tool(metadata_path: Path, provider_name: str) -> dict[str, Any]:
-    if not metadata_path.exists():
-        return {"success": False, "error": "No metadata file found."}
 
-    with metadata_path.open("r", encoding="utf-8") as file:
-        metadata = json.load(file)
+def get_scrape_result_tool(
+    metadata_service: MetadataService,
+    provider_name: str,
+) -> dict[str, Any]:
+    metadata = metadata_service.load()
+    normalized_provider = provider_name.strip().lower()
 
-    if provider_name not in metadata:
+    provider_metadata = metadata.get(normalized_provider)
+    if not provider_metadata:
         return {
             "success": False,
-            "error": f"No scrape result found for '{provider_name}'.",
+            "error": f"No metadata found for provider '{normalized_provider}'.",
         }
 
-    return {"success": True, "data": metadata[provider_name]}
+    return {
+        "success": True,
+        "data": provider_metadata,
+    }
