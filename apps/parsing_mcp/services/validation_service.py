@@ -18,13 +18,13 @@ class ValidationService:
 
         normalized_record = dict(pricing_record)
 
-        normalized_record["provider_name"] = str(
-            normalized_record["provider_name"]
-        ).strip().lower()
+        normalized_record["provider_name"] = (
+            str(normalized_record["provider_name"]).strip().lower()
+        )
 
-        normalized_record["model_name"] = str(
-            normalized_record["model_name"]
-        ).strip().lower()
+        normalized_record["model_name"] = (
+            str(normalized_record["model_name"]).strip().lower()
+        )
 
         for field_name in ("input_price_per_1m", "output_price_per_1m"):
             value = normalized_record.get(field_name)
@@ -34,8 +34,8 @@ class ValidationService:
 
             normalized_record[field_name] = float(value)
 
-        normalized_record["currency"] = str(
-            normalized_record.get("currency", "USD")
-        ).strip().upper()
+        normalized_record["currency"] = (
+            str(normalized_record.get("currency", "USD")).strip().upper()
+        )
 
         return normalized_record

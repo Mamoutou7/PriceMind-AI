@@ -34,7 +34,10 @@ class ParsingService:
                 raw_content=raw_content,
             )
 
-        return [self._validation_service.validate_pricing_record(record) for record in records]
+        return [
+            self._validation_service.validate_pricing_record(record)
+            for record in records
+        ]
 
     @staticmethod
     def _parse_deterministically(
@@ -42,7 +45,7 @@ class ParsingService:
         raw_content: str,
     ) -> list[dict[str, Any]]:
         pattern = re.compile(
-            r"(?P<model>[A-Za-z0-9\-\s]+?)\s+"
+            r"(?P<model>[A-Za-z0-9._\-/\s]+?)\s+"
             r"(?P<input>\d+(?:\.\d+)?)\s*/\s*1M\s+input.*?"
             r"(?P<output>\d+(?:\.\d+)?)\s*/\s*1M\s+output",
             flags=re.IGNORECASE | re.DOTALL,
@@ -51,12 +54,16 @@ class ParsingService:
         records: list[dict[str, Any]] = []
 
         for match in pattern.finditer(raw_content):
+            model_name = match.group("model").strip().lower()
+            input_price = float(match.group("input"))
+            output_price = float(match.group("output"))
+
             records.append(
                 {
-                    "provider_name": provider_name,
-                    "model_name": match.group("model").strip(),
-                    "input_price_per_1m": match.group("input"),
-                    "output_price_per_1m": match.group("output"),
+                    "provider_name": provider_name.strip().lower(),
+                    "model_name": model_name,
+                    "input_price_per_1m": input_price,
+                    "output_price_per_1m": output_price,
                     "currency": "USD",
                 }
             )

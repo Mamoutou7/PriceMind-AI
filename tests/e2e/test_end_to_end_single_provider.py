@@ -1,5 +1,8 @@
 from pathlib import Path
 
+from apps.parser_mcp.services.llm_fallback_extractor import LLMFallbackExtractor
+from apps.parser_mcp.services.parsing_service import ParsingService
+from apps.parser_mcp.services.validation_service import ValidationService
 from apps.scraping_mcp.services.firecrawl_service import FirecrawlService
 from apps.scraping_mcp.services.metadata_service import MetadataService
 from apps.scraping_mcp.services.raw_document_service import RawDocumentService
@@ -7,9 +10,6 @@ from apps.scraping_mcp.services.scrape_service import ScrapeService
 from apps.scraping_mcp.tools.get_raw_provider_content import (
     get_raw_provider_content_tool,
 )
-from apps.parser_mcp.services.llm_fallback_extractor import LLMFallbackExtractor
-from apps.parser_mcp.services.parsing_service import ParsingService
-from apps.parser_mcp.services.validation_service import ValidationService
 from apps.storage_mcp.db.connection import get_connection
 from apps.storage_mcp.db.repositories.model_repository import ModelRepository
 from apps.storage_mcp.db.repositories.price_repository import PriceRepository

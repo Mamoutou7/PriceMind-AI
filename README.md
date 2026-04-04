@@ -1,39 +1,41 @@
 # PriceMind AI  
-**Autonomous AI Agent for LLM Pricing Analysis**
+**A modular, tool-driven AI system built on top of MCP, where MCP acts as the interoperability layer between specialized services in a data-first pipeline**
 
----
+
 
 ## Overview
 
-PriceMind AI is an intelligent agent powered by a Large Language Model (LLM) that can:
+PriceMind AI is a modular AI system designed to **collect, structure, store, and analyze LLM pricing data** from multiple providers.
 
-- Automatically scrape pricing data from AI model providers  
-- Extract structured information from unstructured web content  
-- Store the extracted data in a queryable database  
-- Answer user queries using the collected data  
+It combines:
+- Web scraping
+- Structured data extraction
+- Validation
+- Persistence
+- Query & comparison
 
-This project demonstrates how to build a **tool-augmented LLM agent with an end-to-end data pipeline**.
-
----
+All orchestrated through a **deterministic pipeline augmented with LLM capabilities using MCP (Model Context Protocol)**.
 
 ## Architecture
 ```text
 User Query
    ↓
-LLM (Anthropic)
+Orchestrator (CLI Agent)
    ↓
-Tool Calling (MCP)
+Planner → Execution Pipeline
    ↓
-Web Scraping (Firecrawl)
+┌───────────────┬────────────────────────────┬───────────────┐
+│ Scraping MCP  │ Parser MCP                │ Storage MCP   │
+│               │                           │               │
+│ Scrape pages  │ Deterministic parsing     │ Persist data  │
+│ Save raw data │ (regex / rules)           │ Query data    │
+│               │           ↓               │               │
+│               │     LLM Fallback          │               │
+│               │     (Anthropic API)       │               │
+└───────────────┴────────────────────────────┴───────────────┘
    ↓
-Structured Extraction (LLM → JSON)
-   ↓
-Database (SQLite)
-   ↓
-Response Generation
+Response Builder (CLI Output)
 ```
-
----
 
 ## Core Components
 
