@@ -40,9 +40,14 @@ class QueryPlanner:
             if not intent.providers:
                 return ExecutionPlan(steps=[])
 
-            if intent.intent_type == IntentType.COMPARE_PROVIDERS and not intent.model_name:
+            if (
+                intent.intent_type == IntentType.COMPARE_PROVIDERS
+                and not intent.model_name
+            ):
                 return ExecutionPlan(
-                    steps=[PlanStep(tool_name="get_latest_prices", arguments={"limit": 20})]
+                    steps=[
+                        PlanStep(tool_name="get_latest_prices", arguments={"limit": 20})
+                    ]
                 )
 
             steps: list[PlanStep] = []

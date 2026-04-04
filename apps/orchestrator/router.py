@@ -76,9 +76,15 @@ class QueryRouter:
 
         patterns = [
             r"\bcompare\b.+?\bfor\b\s+(?P<model>.+)$",
-            r"\bprice\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
-            r"\bpricing\s+for\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
-            r"\bcost\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
+            r"\bprice\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:"
+            + "|".join(self.KNOWN_PROVIDERS)
+            + r")\b|$)",
+            r"\bpricing\s+for\s+(?P<model>.+?)(?:\s+on\s+(?:"
+            + "|".join(self.KNOWN_PROVIDERS)
+            + r")\b|$)",
+            r"\bcost\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:"
+            + "|".join(self.KNOWN_PROVIDERS)
+            + r")\b|$)",
             r"\bfor\b\s+(?P<model>.+)$",
         ]
 

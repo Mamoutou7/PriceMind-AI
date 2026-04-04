@@ -1,10 +1,11 @@
-import pytest
 from pathlib import Path
 
+import pytest
+
 from apps.storage_mcp.db.connection import get_connection
-from apps.storage_mcp.db.repositories.provider_repository import ProviderRepository
 from apps.storage_mcp.db.repositories.model_repository import ModelRepository
 from apps.storage_mcp.db.repositories.price_repository import PriceRepository
+from apps.storage_mcp.db.repositories.provider_repository import ProviderRepository
 
 pytestmark = pytest.mark.integration
 

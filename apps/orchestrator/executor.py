@@ -37,7 +37,9 @@ class ToolExecutor:
                 raw_result = await server.execute_tool(step.tool_name, arguments)
                 normalized_result = self._normalize_tool_result(raw_result)
 
-                self._update_context(arguments, step.tool_name, normalized_result, context)
+                self._update_context(
+                    arguments, step.tool_name, normalized_result, context
+                )
 
                 results.append(
                     {

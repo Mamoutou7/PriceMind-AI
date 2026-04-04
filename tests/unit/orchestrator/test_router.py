@@ -1,6 +1,6 @@
 import pytest
 
-from apps.orchestrator.router import QueryRouter, IntentType
+from apps.orchestrator.router import IntentType, QueryRouter
 
 pytestmark = pytest.mark.unit
 

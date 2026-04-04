@@ -3,13 +3,19 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from apps.parsing_mcp.models.pricing import ExtractionMetadata, ParsedPricingRecord, ParsingResult
+from apps.parsing_mcp.models.pricing import (
+    ExtractionMetadata,
+    ParsedPricingRecord,
+    ParsingResult,
+)
 from apps.parsing_mcp.services.llm_fallback_extractor import LLMFallbackExtractor
 from apps.parsing_mcp.services.validation_service import ValidationService
 
 
 class ParsingService:
-    """Parses provider pricing pages with deterministic extraction first, then LLM fallback."""
+    """Parses provider pricing pages with d
+    eterministic extraction first, then LLM fallback.
+    """
 
     PRICE_PATTERN = re.compile(
         r"(?P<value>\d+(?:\.\d+)?)\s*(?:/|per)?\s*1m",
@@ -26,7 +32,9 @@ class ParsingService:
 
     def parse_document(self, provider_name: str, raw_content: str) -> ParsingResult:
         normalized_provider = provider_name.strip().lower()
-        deterministic_records = self._deterministic_extract(normalized_provider, raw_content)
+        deterministic_records = self._deterministic_extract(
+            normalized_provider, raw_content
+        )
 
         if deterministic_records:
             validated = self._validate_records(deterministic_records)
@@ -42,7 +50,9 @@ class ParsingService:
             )
 
         if self._llm_fallback_extractor.is_available():
-            llm_records = self._llm_fallback_extractor.extract(normalized_provider, raw_content)
+            llm_records = self._llm_fallback_extractor.extract(
+                normalized_provider, raw_content
+            )
             validated = self._validate_records(llm_records)
             return ParsingResult(
                 records=validated,
@@ -66,7 +76,9 @@ class ParsingService:
             ),
         )
 
-    def _validate_records(self, records: list[dict[str, Any]]) -> list[ParsedPricingRecord]:
+    def _validate_records(
+        self, records: list[dict[str, Any]]
+    ) -> list[ParsedPricingRecord]:
         validated: list[ParsedPricingRecord] = []
         seen: set[tuple[str, str, float | None, float | None, str]] = set()
 
@@ -85,7 +97,9 @@ class ParsingService:
 
         return validated
 
-    def _deterministic_extract(self, provider_name: str, raw_content: str) -> list[dict[str, Any]]:
+    def _deterministic_extract(
+        self, provider_name: str, raw_content: str
+    ) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
 
         records.extend(self._extract_from_markdown_tables(provider_name, raw_content))
@@ -93,7 +107,9 @@ class ParsingService:
 
         return records
 
-    def _extract_from_markdown_tables(self, provider_name: str, raw_content: str) -> list[dict[str, Any]]:
+    def _extract_from_markdown_tables(
+        self, provider_name: str, raw_content: str
+    ) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
         lines = [line.strip() for line in raw_content.splitlines() if line.strip()]
 
@@ -108,7 +124,9 @@ class ParsingService:
             header_text = " | ".join(columns)
             if "model" not in header_text:
                 continue
-            if not any(keyword in header_text for keyword in ("input", "output", "price")):
+            if not any(
+                keyword in header_text for keyword in ("input", "output", "price")
+            ):
                 continue
 
             if index + 1 >= len(lines):
@@ -120,7 +138,9 @@ class ParsingService:
 
             data_index = index + 2
             while data_index < len(lines) and "|" in lines[data_index]:
-                row_cells = [cell.strip() for cell in lines[data_index].strip("|").split("|")]
+                row_cells = [
+                    cell.strip() for cell in lines[data_index].strip("|").split("|")
+                ]
                 if len(row_cells) < len(columns):
                     data_index += 1
                     continue
@@ -157,7 +177,9 @@ class ParsingService:
 
         return records
 
-    def _extract_from_inline_lines(self, provider_name: str, raw_content: str) -> list[dict[str, Any]]:
+    def _extract_from_inline_lines(
+        self, provider_name: str, raw_content: str
+    ) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
 
         for line in raw_content.splitlines():
@@ -169,7 +191,10 @@ class ParsingService:
             if "input" not in lower_line and "output" not in lower_line:
                 continue
 
-            prices = [float(match.group("value")) for match in self.PRICE_PATTERN.finditer(cleaned)]
+            prices = [
+                float(match.group("value"))
+                for match in self.PRICE_PATTERN.finditer(cleaned)
+            ]
             if not prices:
                 continue
 
@@ -204,7 +229,9 @@ class ParsingService:
         return None
 
     @classmethod
-    def _resolve_price_from_row(cls, row_map: dict[str, str], keywords: tuple[str, ...]) -> float | None:
+    def _resolve_price_from_row(
+        cls, row_map: dict[str, str], keywords: tuple[str, ...]
+    ) -> float | None:
         for key, value in row_map.items():
             lowered_key = key.lower()
             if any(keyword in lowered_key for keyword in keywords):
@@ -220,7 +247,17 @@ class ParsingService:
     @classmethod
     def _extract_model_name_from_line(cls, line: str) -> str | None:
         lower_line = line.lower()
-        for token in (" input", " output", " $", " 0.", " 1.", " 2.", " 3.", " 4.", " 5."):
+        for token in (
+            " input",
+            " output",
+            " $",
+            " 0.",
+            " 1.",
+            " 2.",
+            " 3.",
+            " 4.",
+            " 5.",
+        ):
             index = lower_line.find(token)
             if index > 0:
                 candidate = line[:index].strip(" :-|")

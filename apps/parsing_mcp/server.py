@@ -23,7 +23,9 @@ def parse_provider_content(
     html: str = "",
 ) -> dict:
     raw_content = markdown or html
-    result = parsing_service.parse_document(provider_name=provider_name, raw_content=raw_content)
+    result = parsing_service.parse_document(
+        provider_name=provider_name, raw_content=raw_content
+    )
 
     return {
         "success": True,

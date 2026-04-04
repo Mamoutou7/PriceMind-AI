@@ -9,7 +9,6 @@ from apps.scraping_mcp.services.metadata_service import MetadataService
 from apps.scraping_mcp.services.raw_document_service import RawDocumentService
 from core.providers import list_supported_providers
 
-
 ALLOWED_PROVIDERS = set(list_supported_providers())
 
 

@@ -16,7 +16,9 @@ def get_raw_provider_content_tool(
     markdown_path = provider_dir / "page.markdown.txt"
     html_path = provider_dir / "page.html.txt"
 
-    markdown = markdown_path.read_text(encoding="utf-8") if markdown_path.exists() else ""
+    markdown = (
+        markdown_path.read_text(encoding="utf-8") if markdown_path.exists() else ""
+    )
     html = html_path.read_text(encoding="utf-8") if html_path.exists() else ""
 
     return {

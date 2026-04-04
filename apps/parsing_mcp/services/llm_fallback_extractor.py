@@ -40,7 +40,8 @@ class LLMFallbackExtractor:
             - Return ONLY valid JSON.
             - Return a JSON array.
             - Each item must contain:
-              provider_name, model_name, input_price_per_1m, output_price_per_1m, currency
+              provider_name, model_name, input_price_per_1m,
+              output_price_per_1m, currency
             - Use null when a price is missing.
             - Normalize provider_name to lowercase.
             - Normalize model_name to lowercase.

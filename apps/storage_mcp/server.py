@@ -26,7 +26,9 @@ def _build_repositories():
 
 @mcp.tool(name="store_parsed_prices")
 def store_parsed_prices(records: list[dict]) -> dict:
-    connection, provider_repository, model_repository, price_repository = _build_repositories()
+    connection, provider_repository, model_repository, price_repository = (
+        _build_repositories()
+    )
     try:
         return store_parsed_prices_tool(
             provider_repository=provider_repository,
@@ -46,7 +48,9 @@ def upsert_provider_price(
     output_price_per_1m: float | None = None,
     currency: str = "USD",
 ) -> dict:
-    connection, provider_repository, model_repository, price_repository = _build_repositories()
+    connection, provider_repository, model_repository, price_repository = (
+        _build_repositories()
+    )
     try:
         return upsert_provider_price_tool(
             provider_repository=provider_repository,

@@ -23,7 +23,9 @@ def main() -> None:
         validation_service=ValidationService(),
         llm_fallback_extractor=LLMFallbackExtractor(),
     )
-    result = service.parse_document(provider_name=provider_name, raw_content=raw_content)
+    result = service.parse_document(
+        provider_name=provider_name, raw_content=raw_content
+    )
 
     print(
         json.dumps(

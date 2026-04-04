@@ -15,8 +15,12 @@ class ComparisonService:
                 "cheapest_output": None,
             }
 
-        input_candidates = [row for row in rows if row.get("input_price_per_1m") is not None]
-        output_candidates = [row for row in rows if row.get("output_price_per_1m") is not None]
+        input_candidates = [
+            row for row in rows if row.get("input_price_per_1m") is not None
+        ]
+        output_candidates = [
+            row for row in rows if row.get("output_price_per_1m") is not None
+        ]
 
         cheapest_input = min(
             input_candidates,

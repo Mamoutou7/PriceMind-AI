@@ -18,7 +18,9 @@ class FakeServer:
             return {
                 "success": True,
                 "provider_name": arguments["provider_name"],
-                "markdown": "| Model | Input | Output |\n|---|---:|---:|\n| llama 3.3 70b | 0.59 | 0.79 |",
+                "markdown": "| Model | Input | Output |"
+                            "\n|---|---:|---:|"
+                            "\n| llama 3.3 70b | 0.59 | 0.79 |",
                 "html": "",
             }
         if tool_name == "parse_provider_content":
@@ -37,7 +39,10 @@ class FakeServer:
                 },
             }
         if tool_name == "store_parsed_prices":
-            return {"success": True, "inserted_count": len(arguments.get("records", []))}
+            return {
+                "success": True,
+                "inserted_count": len(arguments.get("records", [])),
+            }
         if tool_name == "compare_prices":
             return {
                 "success": True,

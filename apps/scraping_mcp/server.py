@@ -6,7 +6,9 @@ from apps.scraping_mcp.services.firecrawl_service import FirecrawlService
 from apps.scraping_mcp.services.metadata_service import MetadataService
 from apps.scraping_mcp.services.raw_document_service import RawDocumentService
 from apps.scraping_mcp.services.scrape_service import ScrapeService
-from apps.scraping_mcp.tools.get_raw_provider_content import get_raw_provider_content_tool
+from apps.scraping_mcp.tools.get_raw_provider_content import (
+    get_raw_provider_content_tool,
+)
 from apps.scraping_mcp.tools.get_scrape_result import get_scrape_result_tool
 from apps.scraping_mcp.tools.scrape_all_providers import scrape_all_providers_tool
 from apps.scraping_mcp.tools.scrape_provider import scrape_provider_tool
@@ -24,7 +26,9 @@ scrape_service = ScrapeService(
 
 
 @mcp.tool(name="scrape_provider")
-def scrape_provider(provider_name: str, url: str, formats: list[str] | None = None) -> dict:
+def scrape_provider(
+    provider_name: str, url: str, formats: list[str] | None = None
+) -> dict:
     return scrape_provider_tool(
         scrape_service=scrape_service,
         provider_name=provider_name,

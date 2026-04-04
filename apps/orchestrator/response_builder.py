@@ -103,11 +103,15 @@ class ResponseBuilder:
         summary_lines: list[str] = []
         if cheapest_input:
             summary_lines.append(
-                f"Cheapest input: {cheapest_input['provider_name']} ({self._format_number(cheapest_input['input_price_per_1m'])} {cheapest_input.get('currency', 'USD')})"
+                f"Cheapest input: {cheapest_input['provider_name']} ("
+                f"{self._format_number(cheapest_input['input_price_per_1m'])} "
+                f"{cheapest_input.get('currency', 'USD')})"
             )
         if cheapest_output:
             summary_lines.append(
-                f"Cheapest output: {cheapest_output['provider_name']} ({self._format_number(cheapest_output['output_price_per_1m'])} {cheapest_output.get('currency', 'USD')})"
+                f"Cheapest output: {cheapest_output['provider_name']} ("
+                f"{self._format_number(cheapest_output['output_price_per_1m'])} "
+                f"{cheapest_output.get('currency', 'USD')})"
             )
 
         summary = "\n".join(summary_lines)
@@ -141,7 +145,9 @@ class ResponseBuilder:
             return str(value)
 
     @staticmethod
-    def _find_cheapest(records: list[dict[str, Any]], field_name: str) -> dict[str, Any] | None:
+    def _find_cheapest(
+        records: list[dict[str, Any]], field_name: str
+    ) -> dict[str, Any] | None:
         candidates: list[dict[str, Any]] = []
         for record in records:
             value = record.get(field_name)
@@ -166,7 +172,9 @@ class ResponseBuilder:
         ]
 
         def render_row(row: list[str]) -> str:
-            return " | ".join(str(cell).ljust(widths[index]) for index, cell in enumerate(row))
+            return " | ".join(
+                str(cell).ljust(widths[index]) for index, cell in enumerate(row)
+            )
 
         divider = "-+-".join("-" * width for width in widths)
 
