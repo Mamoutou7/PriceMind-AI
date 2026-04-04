@@ -4,8 +4,6 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum
 
-from scripts.test_storage_pipeline import provider_repository
-
 
 class IntentType(StrEnum):
     PRICE_LOOKUP = "price_lookup"
@@ -25,12 +23,8 @@ class Intent:
 
 class QueryRouter:
     """Detects user intent and extracts the main entities."""
-    KNOWN_PROVIDERS = {
-        "cloudrift",
-        "deepinfra",
-        "fireworks",
-        "groq"
-    }
+
+    KNOWN_PROVIDERS = ("cloudrift", "deepinfra", "fireworks", "groq")
 
     def route_query(self, user_query: str) -> Intent:
         normalized = user_query.strip().lower()
@@ -43,6 +37,14 @@ class QueryRouter:
                 model_name=None,
             )
 
+        if "refresh" in normalized:
+            return Intent(
+                intent_type=IntentType.REFRESH_PROVIDER,
+                user_query=user_query,
+                providers=self.extract_providers(normalized),
+                model_name=self.extract_model_name(normalized),
+            )
+
         if "compare" in normalized:
             return Intent(
                 intent_type=IntentType.COMPARE_PROVIDERS,
@@ -50,7 +52,6 @@ class QueryRouter:
                 providers=self.extract_providers(normalized),
                 model_name=self.extract_model_name(normalized),
             )
-
 
         if any(word in normalized for word in {"price", "cost", "pricing", "charge"}):
             return Intent(
@@ -70,12 +71,22 @@ class QueryRouter:
     def extract_providers(self, query: str) -> list[str]:
         return [provider for provider in self.KNOWN_PROVIDERS if provider in query]
 
-    @staticmethod
-    def extract_model_name(query: str) -> str | None:
-        match = re.match(r"for\s(.+)$", query)
+    def extract_model_name(self, query: str) -> str | None:
+        cleaned = re.sub(r"\s+", " ", query.strip().lower())
 
-        if not match:
-            return None
+        patterns = [
+            r"\bcompare\b.+?\bfor\b\s+(?P<model>.+)$",
+            r"\bprice\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
+            r"\bpricing\s+for\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
+            r"\bcost\s+of\s+(?P<model>.+?)(?:\s+on\s+(?:" + "|".join(self.KNOWN_PROVIDERS) + r")\b|$)",
+            r"\bfor\b\s+(?P<model>.+)$",
+        ]
 
-        model_name = match.group(1).strip()
-        return model_name or None
+        for pattern in patterns:
+            match = re.search(pattern, cleaned)
+            if match:
+                model_name = match.group("model").strip(" ?!.,")
+                if model_name:
+                    return model_name
+
+        return None

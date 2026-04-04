@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from apps.orchestrator.router import Intent, IntentType
+from core.providers import get_provider_url
 
 
 @dataclass(frozen=True)
@@ -34,9 +35,15 @@ class QueryPlanner:
         if intent.intent_type in {
             IntentType.PRICE_LOOKUP,
             IntentType.COMPARE_PROVIDERS,
+            IntentType.REFRESH_PROVIDER,
         }:
-            if not intent.providers or not intent.model_name:
+            if not intent.providers:
                 return ExecutionPlan(steps=[])
+
+            if intent.intent_type == IntentType.COMPARE_PROVIDERS and not intent.model_name:
+                return ExecutionPlan(
+                    steps=[PlanStep(tool_name="get_latest_prices", arguments={"limit": 20})]
+                )
 
             steps: list[PlanStep] = []
 
@@ -54,53 +61,44 @@ class QueryPlanner:
                             tool_name="get_raw_provider_content",
                             arguments={"provider_name": provider},
                         ),
-                        PlanStep(
-                            tool_name="parse_provider_content",
-                            arguments={
-                                "provider_name": provider,
-                                "__from_previous__": "raw_content",
-                            },
-                        ),
-                        PlanStep(
-                            tool_name="store_parsed_prices",
-                            arguments={
-                                "__from_previous__": "parsed_prices",
-                            },
-                        ),
                     ]
                 )
 
-            if intent.intent_type == IntentType.COMPARE_PROVIDERS:
-                steps.append(
-                    PlanStep(
-                        tool_name="compare_prices",
-                        arguments={
-                            "providers": intent.providers,
-                            "model_name": intent.model_name,
-                        },
+                if intent.intent_type != IntentType.REFRESH_PROVIDER:
+                    steps.extend(
+                        [
+                            PlanStep(
+                                tool_name="parse_provider_content",
+                                arguments={
+                                    "provider_name": provider,
+                                    "__provider__": provider,
+                                    "__from_previous__": "raw_content",
+                                },
+                            ),
+                            PlanStep(
+                                tool_name="store_parsed_prices",
+                                arguments={
+                                    "__provider__": provider,
+                                    "__from_previous__": "parsed_prices",
+                                },
+                            ),
+                        ]
                     )
-                )
-            else:
-                steps.append(
-                    PlanStep(
-                        tool_name="compare_prices",
-                        arguments={
-                            "providers": intent.providers,
-                            "model_name": intent.model_name,
-                        },
-                    )
-                )
 
+            if intent.intent_type != IntentType.REFRESH_PROVIDER and intent.model_name:
+                steps.append(
+                    PlanStep(
+                        tool_name="compare_prices",
+                        arguments={
+                            "providers": intent.providers,
+                            "model_name": intent.model_name,
+                        },
+                    )
+                )
             return ExecutionPlan(steps=steps)
 
         return ExecutionPlan(steps=[])
 
     @staticmethod
     def _provider_url(provider_name: str) -> str:
-        urls = {
-            "cloudrift": "https://www.cloudrift.ai/pricing",
-            "deepinfra": "https://deepinfra.com/pricing",
-            "fireworks": "https://fireworks.ai/pricing",
-            "groq": "https://groq.com/pricing",
-        }
-        return urls[provider_name]
+        return get_provider_url(provider_name)

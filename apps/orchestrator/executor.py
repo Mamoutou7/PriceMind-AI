@@ -18,7 +18,7 @@ class ToolExecutor:
 
     async def execute(self, plan: ExecutionPlan) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
-        context: dict[str, Any] = {}
+        context: dict[str, Any] = {"providers": {}}
 
         for step in plan.steps:
             server = self._servers_by_tool.get(step.tool_name)
@@ -37,7 +37,7 @@ class ToolExecutor:
                 raw_result = await server.execute_tool(step.tool_name, arguments)
                 normalized_result = self._normalize_tool_result(raw_result)
 
-                self._update_context(step.tool_name, normalized_result, context)
+                self._update_context(arguments, step.tool_name, normalized_result, context)
 
                 results.append(
                     {
@@ -65,14 +65,16 @@ class ToolExecutor:
     ) -> dict[str, Any]:
         resolved = dict(arguments)
         source = resolved.pop("__from_previous__", None)
+        provider_name = resolved.pop("__provider__", None)
+        provider_context = context.get("providers", {}).get(provider_name, {})
 
         if source == "raw_content":
-            raw_content = context.get("last_raw_content", {})
+            raw_content = provider_context.get("raw_content", {})
             resolved["markdown"] = raw_content.get("markdown", "")
             resolved["html"] = raw_content.get("html", "")
 
         elif source == "parsed_prices":
-            resolved["records"] = context.get("last_parsed_prices", [])
+            resolved["records"] = provider_context.get("parsed_prices", [])
 
         return resolved
 
@@ -97,6 +99,7 @@ class ToolExecutor:
 
     @staticmethod
     def _update_context(
+        arguments: dict[str, Any],
         tool_name: str,
         normalized_result: Any,
         context: dict[str, Any],
@@ -104,8 +107,17 @@ class ToolExecutor:
         if not isinstance(normalized_result, dict):
             return
 
+        provider_name = str(arguments.get("provider_name", "")).strip().lower()
+        if not provider_name:
+            return
+
+        providers_context = context.setdefault("providers", {})
+        provider_context = providers_context.setdefault(provider_name, {})
+
         if tool_name == "get_raw_provider_content" and normalized_result.get("success"):
-            context["last_raw_content"] = normalized_result
+            provider_context["raw_content"] = normalized_result
 
         if tool_name == "parse_provider_content" and normalized_result.get("success"):
-            context["last_parsed_prices"] = normalized_result.get("data", [])
+            parsed_payload = normalized_result.get("data", {})
+            if isinstance(parsed_payload, dict):
+                provider_context["parsed_prices"] = parsed_payload.get("records", [])

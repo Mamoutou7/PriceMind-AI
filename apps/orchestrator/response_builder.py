@@ -83,6 +83,7 @@ class ResponseBuilder:
             "Input / 1M",
             "Output / 1M",
             "Currency",
+            "Created At",
         ]
         rows = [
             [
@@ -91,6 +92,7 @@ class ResponseBuilder:
                 self._format_number(record.get("input_price_per_1m")),
                 self._format_number(record.get("output_price_per_1m")),
                 str(record.get("currency", "USD")),
+                str(record.get("created_at", "unknown")),
             ]
             for record in records
         ]
@@ -98,25 +100,19 @@ class ResponseBuilder:
         cheapest_input = self._find_cheapest(records, "input_price_per_1m")
         cheapest_output = self._find_cheapest(records, "output_price_per_1m")
 
-        summary_lines = ["Price comparison", self._render_table(headers, rows)]
-
+        summary_lines: list[str] = []
         if cheapest_input:
             summary_lines.append(
-                "Cheapest input price: "
-                f"{cheapest_input['provider_name']} "
-                f"({self._format_number(cheapest_input['input_price_per_1m'])} "
-                f"{cheapest_input.get('currency', 'USD')})"
+                f"Cheapest input: {cheapest_input['provider_name']} ({self._format_number(cheapest_input['input_price_per_1m'])} {cheapest_input.get('currency', 'USD')})"
             )
-
         if cheapest_output:
             summary_lines.append(
-                "Cheapest output price: "
-                f"{cheapest_output['provider_name']} "
-                f"({self._format_number(cheapest_output['output_price_per_1m'])} "
-                f"{cheapest_output.get('currency', 'USD')})"
+                f"Cheapest output: {cheapest_output['provider_name']} ({self._format_number(cheapest_output['output_price_per_1m'])} {cheapest_output.get('currency', 'USD')})"
             )
 
-        return "\n".join(summary_lines)
+        summary = "\n".join(summary_lines)
+        table = self._render_table(headers, rows)
+        return "Price comparison\n" + table + (f"\n{summary}" if summary else "")
 
     def _format_generic_payload(self, payload: Any) -> str:
         normalized_payload = self._normalize_payload(payload)
@@ -126,95 +122,58 @@ class ResponseBuilder:
 
         return str(normalized_payload)
 
-    def _normalize_payload(self, payload: Any) -> Any:
-        if payload is None:
-            return None
+    @staticmethod
+    def _normalize_payload(payload: Any) -> Any:
+        if isinstance(payload, str):
+            try:
+                return json.loads(payload)
+            except json.JSONDecodeError:
+                return payload
+        return payload
 
-        if isinstance(payload, (dict, list, str, int, float, bool)):
-            return payload
+    @staticmethod
+    def _format_number(value: Any) -> str:
+        if value is None:
+            return "-"
+        try:
+            return f"{Decimal(str(value)):.4f}"
+        except (InvalidOperation, ValueError):
+            return str(value)
 
-        content = getattr(payload, "content", None)
-        if content:
-            text_fragments: list[str] = []
-
-            for item in content:
-                item_text = getattr(item, "text", None)
-                if item_text:
-                    text_fragments.append(item_text)
-
-            if text_fragments:
-                joined_text = "\n".join(text_fragments).strip()
-
-                try:
-                    return json.loads(joined_text)
-                except json.JSONDecodeError:
-                    return joined_text
-
-        return str(payload)
-
-    def _render_table(self, headers: list[str], rows: list[list[str]]) -> str:
-        if not rows:
-            return "No data available."
-
-        string_rows = [[str(cell) for cell in row] for row in rows]
-        widths = [
-            max(len(headers[index]), *(len(row[index]) for row in string_rows))
-            for index in range(len(headers))
-        ]
-
-        def make_border() -> str:
-            return "+-" + "-+-".join("-" * width for width in widths) + "-+"
-
-        def make_row(row: list[str]) -> str:
-            cells = [
-                row[index].ljust(widths[index]) for index in range(len(widths))
-            ]
-            return "| " + " | ".join(cells) + " |"
-
-        lines = [
-            make_border(),
-            make_row(headers),
-            make_border(),
-        ]
-
-        for row in string_rows:
-            lines.append(make_row(row))
-
-        lines.append(make_border())
-        return "\n".join(lines)
-
-    def _find_cheapest(
-        self,
-        records: list[dict[str, Any]],
-        field_name: str,
-    ) -> dict[str, Any] | None:
-        valid_records: list[dict[str, Any]] = []
-
+    @staticmethod
+    def _find_cheapest(records: list[dict[str, Any]], field_name: str) -> dict[str, Any] | None:
+        candidates: list[dict[str, Any]] = []
         for record in records:
             value = record.get(field_name)
             if value is None:
                 continue
-
             try:
                 Decimal(str(value))
             except (InvalidOperation, ValueError):
                 continue
+            candidates.append(record)
 
-            valid_records.append(record)
-
-        if not valid_records:
+        if not candidates:
             return None
 
-        return min(valid_records, key=lambda record: Decimal(str(record[field_name])))
+        return min(candidates, key=lambda record: Decimal(str(record[field_name])))
 
-    def _format_number(self, value: Any) -> str:
-        if value is None:
-            return "N/A"
+    @staticmethod
+    def _render_table(headers: list[str], rows: list[list[str]]) -> str:
+        widths = [
+            max(len(str(header)), *(len(str(row[index])) for row in rows))
+            for index, header in enumerate(headers)
+        ]
 
-        try:
-            number = Decimal(str(value))
-        except (InvalidOperation, ValueError):
-            return str(value)
+        def render_row(row: list[str]) -> str:
+            return " | ".join(str(cell).ljust(widths[index]) for index, cell in enumerate(row))
 
-        normalized = number.normalize()
-        return format(normalized, "f").rstrip("0").rstrip(".") if "." in format(normalized, "f") else format(normalized, "f")
+        divider = "-+-".join("-" * width for width in widths)
+
+        return "\n".join(
+            [
+                render_row(headers),
+                divider,
+                *(render_row(row) for row in rows),
+            ]
+        )

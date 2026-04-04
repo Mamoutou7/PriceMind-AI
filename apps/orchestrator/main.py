@@ -5,7 +5,6 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any, cast
 
 from mcp import ClientSession, StdioServerParameters
@@ -16,12 +15,10 @@ from apps.orchestrator.planner import QueryPlanner
 from apps.orchestrator.response_builder import ResponseBuilder
 from apps.orchestrator.router import QueryRouter
 from apps.orchestrator.session import ChatSession
+from core.config import CONFIG_PATH
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-CONFIG_PATH = BASE_DIR / "server_config.json"
 
 
 class MCPServerClient:
@@ -58,7 +55,12 @@ def load_config() -> dict[str, Any]:
     if not isinstance(raw_data, dict):
         raise ValueError("server_config.json must contain a top-level JSON object.")
 
-    return cast(dict[str, Any], raw_data)
+    config = cast(dict[str, Any], raw_data)
+    mcp_servers = config.get("mcpServers", {})
+    if "parsing_mcp" not in mcp_servers and "parsing_mcp" in mcp_servers:
+        mcp_servers["parsing_mcp"] = mcp_servers.pop("parsing_mcp")
+    config["mcpServers"] = mcp_servers
+    return config
 
 
 async def async_main() -> None:
@@ -71,8 +73,8 @@ async def async_main() -> None:
             config=mcp_servers["scraping_mcp"],
         ) as scraping_server,
         create_mcp_server_client(
-            name="parser_mcp",
-            config=mcp_servers["parser_mcp"],
+            name="parsing_mcp",
+            config=mcp_servers["parsing_mcp"],
         ) as parser_server,
         create_mcp_server_client(
             name="storage_mcp",
