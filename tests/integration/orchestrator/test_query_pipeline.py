@@ -19,8 +19,8 @@ class FakeServer:
                 "success": True,
                 "provider_name": arguments["provider_name"],
                 "markdown": "| Model | Input | Output |"
-                            "\n|---|---:|---:|"
-                            "\n| llama 3.3 70b | 0.59 | 0.79 |",
+                "\n|---|---:|---:|"
+                "\n| llama 3.3 70b | 0.59 | 0.79 |",
                 "html": "",
             }
         if tool_name == "parse_provider_content":

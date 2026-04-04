@@ -110,6 +110,7 @@ class ToolExecutor:
             return
 
         provider_name = str(arguments.get("provider_name", "")).strip().lower()
+
         if not provider_name:
             return
 

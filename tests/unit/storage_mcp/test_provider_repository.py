@@ -7,12 +7,10 @@ def build_connection() -> sqlite3.Connection:
     connection = sqlite3.connect(":memory:")
     connection.row_factory = sqlite3.Row
     connection.execute(
-
-            "CREATE TABLE models ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "canonical_name TEXT NOT NULL UNIQUE"
-            ")"
-
+        "CREATE TABLE models ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "canonical_name TEXT NOT NULL UNIQUE"
+        ")"
     )
     return connection
 
