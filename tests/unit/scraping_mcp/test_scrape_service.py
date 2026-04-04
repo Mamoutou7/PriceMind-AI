@@ -26,7 +26,7 @@ class DummyRawDocumentService:
 
     def save(self, provider_name: str, format_name: str, content: str) -> str:
         self.saved.append((provider_name, format_name, content))
-        return f"/tmp/{provider_name}/page.{format_name}.txt"
+        return f"mocked/{provider_name}/page.{format_name}.txt"
 
 
 class DummyMetadataService:
