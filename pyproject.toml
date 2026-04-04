@@ -1,14 +1,15 @@
 [project]
 name = "pricemind-ai"
 version = "0.1.0"
-description = "MCP-based LLM pricing scraper, parser and comparison assistant."
+description = "Modular AI system to collect, structure, store, and analyze LLM pricing data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.49.0",
-    "firecrawl-py>=2.7.1",
     "mcp>=1.6.0",
+    "openai>=2.30.0",
+    "firecrawl-py>=2.7.1",
     "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.1",
     "python-dotenv>=1.0.1",
 ]
 
@@ -26,19 +27,15 @@ dev = [
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = [
-    "apps",
-    "apps.orchestrator",
-    "apps.scraping_mcp",
-    "apps.scraping_mcp.tools",
-    "apps.scraping_mcp.services",
-    "apps.parser_mcp",
-    "apps.parser_mcp.services",
-    "apps.storage_mcp",
-    "apps.storage_mcp.tools",
-    "apps.storage_mcp.db",
-    "apps.storage_mcp.db.repositories",
+[tool.setuptools.packages.find]
+include = [
+    "apps*",
+    "core*",
+    "shared*",
+]
+exclude = [
+    "tests*",
+    "scripts*",
 ]
 
 [tool.ruff]
@@ -49,16 +46,22 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "N", "W"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["apps"]
+known-first-party = ["apps", "core", "shared"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-q --strict-markers"
+markers = [
+    "unit: fast isolated tests",
+    "integration: local integration tests",
+    "e2e: end-to-end tests requiring external services",
+]
 
 [tool.mypy]
 python_version = "3.11"
@@ -72,4 +75,3 @@ ignore_missing_imports = true
 [tool.bandit]
 exclude_dirs = ["tests"]
 skips = ["B101"]
-

@@ -4,9 +4,9 @@
       "command": "uv",
       "args": ["run", "python", "-m", "apps.scraping_mcp.server"]
     },
-    "parser_mcp": {
+    "parsing_mcp": {
       "command": "uv",
-      "args": ["run", "python", "-m", "apps.parser_mcp.server"]
+      "args": ["run", "python", "-m", "apps.parsing_mcp.server"]
     },
     "storage_mcp": {
       "command": "uv",
