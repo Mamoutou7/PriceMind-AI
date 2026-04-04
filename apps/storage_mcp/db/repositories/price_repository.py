@@ -92,7 +92,8 @@ class PriceRepository(Repository):
         if not providers:
             return []
 
-        placeholders = ", ".join("?" for _ in providers)
+        normalized_providers = [provider.strip().lower() for provider in providers]
+        placeholders = ", ".join("?" for _ in normalized_providers)
 
         query = f"""
             SELECT
@@ -108,9 +109,9 @@ class PriceRepository(Repository):
             WHERE p.name IN ({placeholders})
               AND LOWER(m.canonical_name) = LOWER(?)
             ORDER BY ppm.created_at DESC, ppm.id DESC
-        """
+        """  # nosec B608
 
-        cursor = self._connection.execute(query, (*providers, model_name))
+        cursor = self._connection.execute(query, (*normalized_providers, model_name))
         rows = cursor.fetchall()
 
         latest_by_provider: dict[str, dict[str, Any]] = {}
