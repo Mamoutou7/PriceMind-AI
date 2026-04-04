@@ -1,0 +1,19 @@
+{
+  "deepinfra": {
+    "provider_name": "deepinfra",
+    "url": "https://deepinfra.com/pricing",
+    "domain": "deepinfra.com",
+    "scraped_at": "2026-04-04T16:22:18.122897+00:00",
+    "formats": [
+      "markdown",
+      "html"
+    ],
+    "success": true,
+    "content_files": {
+      "markdown": "/Users/mamoutoufofana/Desktop/repositories/PriceMind-AI/tests/data/raw/deepinfra/page.markdown.txt",
+      "html": "/Users/mamoutoufofana/Desktop/repositories/PriceMind-AI/tests/data/raw/deepinfra/page.html.txt"
+    },
+    "title": "Simple Pricing | Machine Learning Infrastructure | Deep Infra",
+    "description": "We provide only pay-what-you-use pricing with no long-term contracts or upfront costs for our machine learning models and infrastructure. Learn more!"
+  }
+}
