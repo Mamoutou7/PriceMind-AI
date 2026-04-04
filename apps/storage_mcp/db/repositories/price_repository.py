@@ -109,7 +109,7 @@ class PriceRepository(Repository):
             WHERE p.name IN ({placeholders})
               AND LOWER(m.canonical_name) = LOWER(?)
             ORDER BY ppm.created_at DESC, ppm.id DESC
-        """  # nosec B608
+        """
 
         cursor = self._connection.execute(query, (*normalized_providers, model_name))
         rows = cursor.fetchall()
