@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from apps.parser_mcp.services.llm_fallback_extractor import LLMFallbackExtractor
-from apps.parser_mcp.services.parsing_service import ParsingService
-from apps.parser_mcp.services.validation_service import ValidationService
+from apps.parsing_mcp.services.llm_fallback_extractor import LLMFallbackExtractor
+from apps.parsing_mcp.services.parsing_service import ParsingService
+from apps.parsing_mcp.services.validation_service import ValidationService
 
-mcp = FastMCP("parser_mcp")
+mcp = FastMCP("parsing_mcp")
 
 validation_service = ValidationService()
 llm_fallback_extractor = LLMFallbackExtractor()
@@ -22,22 +22,15 @@ def parse_provider_content(
     markdown: str = "",
     html: str = "",
 ) -> dict:
-    raw_content = markdown.strip() if markdown.strip() else html.strip()
-
-    if not raw_content:
-        return {
-            "success": False,
-            "error": "No raw content provided.",
-        }
-
-    records = parsing_service.parse_document(
-        provider_name=provider_name,
-        raw_content=raw_content,
-    )
+    raw_content = markdown or html
+    result = parsing_service.parse_document(provider_name=provider_name, raw_content=raw_content)
 
     return {
         "success": True,
-        "data": records,
+        "data": {
+            "records": [record.model_dump() for record in result.records],
+            "metadata": result.metadata.model_dump(),
+        },
     }
 
 
