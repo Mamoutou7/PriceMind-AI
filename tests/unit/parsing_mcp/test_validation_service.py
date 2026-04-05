@@ -1,7 +1,7 @@
 import pytest
 
-from apps.parsing_mcp.services.validation_service import ValidationService
 from apps.parsing_mcp.models.pricing import ParsedPricingRecord
+from apps.parsing_mcp.services.validation_service import ValidationService
 
 
 @pytest.mark.unit

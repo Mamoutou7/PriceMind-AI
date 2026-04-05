@@ -20,11 +20,13 @@ class ResponseBuilder:
             if not result["success"]:
                 details = result.get("data")
                 if details:
+                    failure_payload = self._format_failure_payload(details)
                     sections.append(
-                        f"✗ {tool_name} failed: {result['error']}\n{self._format_failure_payload(details)}"
+                        f"{tool_name} failed: {result['error']}\n"
+                        f"{failure_payload}"
                     )
                 else:
-                    sections.append(f"✗ {tool_name} failed: {result['error']}")
+                    sections.append(f" {tool_name} failed: {result['error']}")
                 continue
 
             payload = result.get("data")
@@ -43,7 +45,7 @@ class ResponseBuilder:
                 sections.append(self._format_store_result(payload))
             else:
                 sections.append(
-                    f"✓ {tool_name} executed successfully.\n"
+                    f"{tool_name} executed successfully.\n"
                     f"{self._format_generic_payload(payload)}"
                 )
 
@@ -52,7 +54,7 @@ class ResponseBuilder:
     def _format_scrape_result(self, payload: Any) -> str:
         data = self._normalize_payload(payload)
         if not isinstance(data, dict):
-            return f"✓ scrape_provider executed successfully.\n{data}"
+            return f"scrape_provider executed successfully.\n{data}"
 
         provider = data.get("provider_name", "unknown")
         domain = data.get("domain", "unknown")
@@ -60,11 +62,14 @@ class ResponseBuilder:
         formats = data.get("formats", [])
         success = data.get("success", False)
 
+        formatted_formats = ", ".join(formats) if isinstance(formats, list) else formats
+
         lines = [
-            f"✓ scrape_provider completed for {provider}",
+            f" scrape_provider completed for {provider}",
             f"  success: {success}",
             f"  domain: {domain}",
-            f"  formats: {', '.join(formats) if isinstance(formats, list) else formats}",
+            f"  formats: {formatted_formats}",
+
         ]
 
         if title:
@@ -75,7 +80,7 @@ class ResponseBuilder:
     def _format_raw_content_result(self, payload: Any) -> str:
         data = self._normalize_payload(payload)
         if not isinstance(data, dict):
-            return f"✓ get_raw_provider_content executed successfully.\n{data}"
+            return f" get_raw_provider_content executed successfully.\n{data}"
 
         provider = data.get("provider_name", "unknown")
         markdown_len = len(str(data.get("markdown", "")))
@@ -83,7 +88,7 @@ class ResponseBuilder:
 
         return "\n".join(
             [
-                f"✓ raw content loaded for {provider}",
+                f" raw content loaded for {provider}",
                 f"  markdown_length: {markdown_len}",
                 f"  html_length: {html_len}",
             ]
@@ -92,11 +97,11 @@ class ResponseBuilder:
     def _format_parse_result(self, payload: Any) -> str:
         data = self._normalize_payload(payload)
         if not isinstance(data, dict):
-            return f"✓ parse_provider_content executed successfully.\n{data}"
+            return f" parse_provider_content executed successfully.\n{data}"
 
         nested = data.get("data", {})
         if not isinstance(nested, dict):
-            return "✓ parse_provider_content executed successfully."
+            return " parse_provider_content executed successfully."
 
         records = nested.get("records", [])
         metadata = nested.get("metadata", {})
@@ -108,7 +113,7 @@ class ResponseBuilder:
 
         return "\n".join(
             [
-                f"✓ parsed pricing for {provider}",
+                f" parsed pricing for {provider}",
                 f"  records: {count}",
                 f"  extraction_method: {method}",
                 f"  used_fallback: {fallback}",
@@ -118,12 +123,12 @@ class ResponseBuilder:
     def _format_store_result(self, payload: Any) -> str:
         data = self._normalize_payload(payload)
         if not isinstance(data, dict):
-            return f"✓ store_parsed_prices executed successfully.\n{data}"
+            return f" store_parsed_prices executed successfully.\n{data}"
 
         inserted_count = data.get("inserted_count", 0)
         return "\n".join(
             [
-                "✓ prices stored successfully",
+                " prices stored successfully",
                 f"  inserted_count: {inserted_count}",
             ]
         )
@@ -205,12 +210,23 @@ class ResponseBuilder:
 
         summary_lines: list[str] = []
         if cheapest_input:
+            input_price = self._format_number(cheapest_input["input_price_per_1m"])
+            input_currency = cheapest_input.get("currency", "USD")
+            input_provider = cheapest_input["provider_name"]
+
             summary_lines.append(
-                f"Cheapest input: {cheapest_input['provider_name']} ({self._format_number(cheapest_input['input_price_per_1m'])} {cheapest_input.get('currency', 'USD')})"
+                f"- Cheapest input: {input_provider} "
+                f"({input_price} {input_currency})"
             )
+
         if cheapest_output:
+            output_price = self._format_number(cheapest_output["output_price_per_1m"])
+            output_currency = cheapest_output.get("currency", "USD")
+            output_provider = cheapest_output["provider_name"]
+
             summary_lines.append(
-                f"Cheapest output: {cheapest_output['provider_name']} ({self._format_number(cheapest_output['output_price_per_1m'])} {cheapest_output.get('currency', 'USD')})"
+                f"- Cheapest output: {output_provider} "
+                f"({output_price} {output_currency})"
             )
 
         summary = "\n".join(summary_lines)
@@ -250,7 +266,9 @@ class ResponseBuilder:
             return str(value)
 
     @staticmethod
-    def _find_cheapest(records: list[dict[str, Any]], field_name: str) -> dict[str, Any] | None:
+    def _find_cheapest(
+        records: list[dict[str, Any]], field_name: str
+    ) -> dict[str, Any] | None:
         candidates: list[dict[str, Any]] = []
         for record in records:
             value = record.get(field_name)
@@ -275,7 +293,9 @@ class ResponseBuilder:
         ]
 
         def render_row(row: list[str]) -> str:
-            return " | ".join(str(cell).ljust(widths[index]) for index, cell in enumerate(row))
+            return " | ".join(
+                str(cell).ljust(widths[index]) for index, cell in enumerate(row)
+            )
 
         divider = "-+-".join("-" * width for width in widths)
 

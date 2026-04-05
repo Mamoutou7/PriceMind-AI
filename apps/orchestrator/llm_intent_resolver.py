@@ -55,7 +55,9 @@ class LLMIntentResolver:
         payload = self._parse_json_object(raw_text)
 
         needs_tools = bool(payload.get("needs_tools", False))
-        intent_type = self._parse_intent_type(str(payload.get("intent_type", "unknown")))
+        intent_type = self._parse_intent_type(
+            str(payload.get("intent_type", "unknown"))
+        )
         providers = self._normalize_providers(payload.get("providers", []))
         model_name = self._normalize_optional_string(payload.get("model_name"))
         direct_answer = self._normalize_optional_string(payload.get("direct_answer"))
@@ -105,13 +107,12 @@ Return ONLY valid JSON with this exact structure:
 }}
 
 Rules:
-- Use needs_tools=false only if the user can be answered without scraping/querying/stored data access
-- For provider pricing lookups, comparisons, refreshes, or stored data queries, tools are usually needed
+- Use needs_tools=false only if the user can be answered without
+  scraping/querying/stored data access
+- For provider pricing lookups, comparisons, refreshes, or stored
+  data queries, tools are usually needed
 - providers must contain only supported providers
 - model_name should be null if absent
-- direct_answer should be null unless needs_tools is false
-- never return markdown
-- never return extra text outside JSON
 
 User query:
 {user_query}

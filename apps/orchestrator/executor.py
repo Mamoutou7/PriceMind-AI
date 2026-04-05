@@ -40,7 +40,10 @@ class ToolExecutor:
                 payload_success = True
                 payload_error: str | None = None
 
-                if isinstance(normalized_result, dict) and "success" in normalized_result:
+                if (
+                    isinstance(normalized_result, dict)
+                    and "success" in normalized_result
+                ):
                     payload_success = bool(normalized_result.get("success"))
                     payload_error = (
                         str(normalized_result.get("error"))
@@ -49,7 +52,9 @@ class ToolExecutor:
                     )
 
                 if payload_success:
-                    self._update_context(arguments, step.tool_name, normalized_result, context)
+                    self._update_context(
+                        arguments, step.tool_name, normalized_result, context
+                    )
                     results.append(
                         {
                             "tool_name": step.tool_name,

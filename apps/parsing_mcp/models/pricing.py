@@ -83,5 +83,7 @@ class ParsingResult(BaseModel):
     @overload
     def __getitem__(self, index: slice) -> list[ParsedPricingRecord]: ...
 
-    def __getitem__(self, index: int | slice) -> ParsedPricingRecord | list[ParsedPricingRecord]:
+    def __getitem__(
+        self, index: int | slice
+    ) -> ParsedPricingRecord | list[ParsedPricingRecord]:
         return self.records[index]
