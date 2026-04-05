@@ -1,54 +1,40 @@
 # PriceMind AI  
-**A modular, tool-driven AI system built on top of MCP, where MCP acts as the interoperability layer between specialized services in a data-first pipeline**
-
----
+**A modular, LLM-assisted, tool-driven system for collecting, structuring, and analyzing LLM pricing data**
 
 ## Overview
 
 PriceMind AI is a modular AI system designed to **collect, structure, store, and analyze LLM pricing data** from multiple providers.
 
-Unlike typical LLM-first approaches, PriceMind follows a **data-first, deterministic pipeline**, where LLMs are only used as a fallback when rule-based parsing fails.
+Unlike fully agentic systems, PriceMind follows a **hybrid architecture**:
 
-It combines:
-- Web scraping
-- Deterministic parsing (tables, patterns)
-- LLM fallback extraction (OpenAI)
-- Data validation (Pydantic)
-- Persistent storage (SQLite)
-- Query & comparison via CLI agent
+- LLM-driven intent resolution 
+- Deterministic execution pipeline
+
+This design ensures:
+- flexibility in understanding user queries
+- reliability and reproducibility in execution
+
+## Key Idea
+**The LLM decides what to do**
+**The system decides how to do it safely**
 
 All orchestrated through a **multi-step tool pipeline using MCP (Model Context Protocol)**.
 
 
-## Architecture
+## Architecture engineering
 
-```text
-User Query
-   ↓
-Orchestrator (CLI Agent)
-   ↓
-Router → Planner → Execution Pipeline
-   ↓
-┌───────────────┬──────────────────────────────┬───────────────┐
-│ Scraping MCP  │ Parsing MCP                 │ Storage MCP   │
-│               │                             │               │
-│ Scrape pages  │ Deterministic parsing       │ Persist data  │
-│ Save raw data │ (tables / regex)            │ Query data    │
-│               │              ↓              │               │
-│               │     LLM fallback (OpenAI)   │               │
-└───────────────┴──────────────────────────────┴───────────────┘
-   ↓
-Response Builder (CLI Output)
-```
-
+![PriceMind AI architecture](pricemindai.png)
 
 ## Core Components
 ### Orchestrator (Agent Layer)
 
-- Routes user intent (price lookup, compare, refresh, etc.)
-- Builds execution plans
-- Executes MCP tools step-by-step
-- Maintains per-provider execution context
+- LLM-driven **intent resolution**
+- Determines whether tools are needed
+  - Extracts:
+  - intent type
+  - providers
+  - model name
+- Delegates execution to deterministic pipeline
 
 ### MCP (Model Context Protocol)
 - Exposes Python functions as tools
@@ -56,14 +42,15 @@ Response Builder (CLI Output)
 - Decouples scraping, parsing, storage
 
 #### Scraping MCP
-Uses Firecrawl for LLM-friendly scraping
-Saves raw HTML + Markdown
-Persists metadata (timestamp, source, files)
+- Uses Firecrawl
+- Extracts: raw HTML + Markdown
+- Persists metadata (timestamp, source, files)
 
 #### Parsing MCP
+Hybrid extraction strategy:
 - Deterministic-first extraction
-- Markdown tables
-- Inline pricing patterns
+  - Markdown tables
+  - Inline pricing patterns
 - LLM fallback (OpenAI) when parsing fails
 - Validation via Pydantic models
 - Deduplication of extracted records
@@ -71,12 +58,14 @@ Persists metadata (timestamp, source, files)
 #### Storage MCP
 - SQLite-based persistence
 - Normalized schema:
-- providers
-- models (canonicalized)
-- pricing records
-- Supports:
+  - providers
+  - models (canonicalized)
+  - pricing records
+  
+Supports:
 - latest prices
 - provider comparison
+- historical inserts
 
 #### Analytics MCP 
 - Computes summaries (cheapest provider, etc.)
@@ -85,6 +74,7 @@ Persists metadata (timestamp, source, files)
 ## Workflow
 1. The user submits a query  
 2. Router extracts:
+   - tools needed?
    - intent
    - providers
    - model name  
@@ -96,17 +86,35 @@ Persists metadata (timestamp, source, files)
    - compare → result
 5. ResponseBuilder formats output
 
+#### Input example 
+```bash
+compare groq and fireworks for llama 3.3 70b
+```
+
+#### Output example 
+```bash
+Price comparison
+
+Provider | Model         | Input / 1M | Output / 1M | Currency
+---------+---------------+------------+-------------+---------
+groq     | llama 3.3 70b | 0.5900     | 0.7900      | USD
+fireworks| llama 3.3 70b | 0.6100     | 0.8200      | USD
+
+Cheapest input: groq
+Cheapest output: groq
+```
+
 ## Key Features
+- LLM-assisted decision making (tool vs no tool)
 - Deterministic + LLM hybrid pipeline
 - Provider-isolated execution context
-- Model name normalization (alias handling)
-- Structured validation (Pydantic)
+- Hybrid parsing (rules + LLM fallback)
+- Strong validation (Pydantic)
+- Currency normalization
+- Flexible model matching
+- Clean CLI output (no raw HTML noise)
 - End-to-end pipeline (scrape → parse → store → query)
-- CLI agent loop
 - Fully testable (unit + integration + e2e)
-
-## Why This Project Matters
-This project showcases how to turn a language model into a **fully functional AI agent** capable of interacting with external systems, collecting real-world data, and generating actionable insights.
 
 ## Tech Stack
 
@@ -150,34 +158,7 @@ python -m scripts.bootstrap_db
 ```bash
 python -m apps.orchestrator.main
 ```
-
-### Quick Validation
-```bash
-python -m scripts.bootstrap_db && pytest
-```
-
-## Testing Strategy
-
-### Run all tests
-```bash
-pytest
-```
-
-### Unit tests:
-```bash
-pytest -m unit
-```
-
-### Integration tests:
-```bash
-pytest -m integration
-```
-
-### E2E tests:
-```bash
-pytest -m e2e
-```
-### Example:
+### Example commands:
 ```bash
 show data
 price of llama 3.3 70b on groq
@@ -185,11 +166,25 @@ compare groq and fireworks for llama 3.3 70b
 refresh groq
 ```
 
+### Quick Validation
+```bash
+python -m scripts.bootstrap_db && pytest
+```
+
+## Testing Strategy
+```bash
+pytest
+pytest -m unit
+pytest -m integration
+pytest -m e2e
+```
+
 ## Current Limitations
-- Parsing still imperfect on complex pricing pages
-- No true SQL upsert (duplicates possible)
+- Parsing still imperfect on complex layouts
+- Model normalization not fully semantic (no embeddings yet)
+- No true UPSERT → duplicates possible
 - No snapshot/versioning of data
-- SQLite limits scalability
+- SQLite not production-ready
 - LLM fallback still heuristic-based
 
 ## Future Improvements
@@ -202,3 +197,13 @@ refresh groq
 - PostgreSQL migration
 - API layer (FastAPI)
 - RAG for historical pricing
+
+
+## Why This Project Matters
+PriceMind demonstrates how to build a **production-grade AI system** where:
+- LLMs are **used intelligently, not blindly**
+- deterministic systems ensure **reliability**
+- modular tools enable **scalability**
+
+It is a blueprint for:
+**Hybrid AI systems combining reasoning + engineering rigor**
