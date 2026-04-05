@@ -25,10 +25,13 @@ class ParsedPricingRecord(BaseModel):
     def normalize_text_fields(cls, value: str) -> str:
         return value.strip().lower()
 
-    @field_validator("currency")
+    @field_validator("currency", mode="before")
     @classmethod
-    def normalize_currency(cls, value: str) -> str:
-        normalized = value.strip().upper()
+    def normalize_currency(cls, value: object) -> str:
+        if value is None:
+            return "USD"
+
+        normalized = str(value).strip().upper()
 
         symbol_map = {
             "$": "USD",
