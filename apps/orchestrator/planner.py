@@ -19,7 +19,7 @@ class ExecutionPlan:
 
 
 class QueryPlanner:
-    """Builds an execution plan from user intent."""
+    """Builds an execution plan from high-level intent."""
 
     def build_plan(self, intent: Intent) -> ExecutionPlan:
         if intent.intent_type == IntentType.SHOW_STORED_DATA:
@@ -39,16 +39,6 @@ class QueryPlanner:
         }:
             if not intent.providers:
                 return ExecutionPlan(steps=[])
-
-            if (
-                intent.intent_type == IntentType.COMPARE_PROVIDERS
-                and not intent.model_name
-            ):
-                return ExecutionPlan(
-                    steps=[
-                        PlanStep(tool_name="get_latest_prices", arguments={"limit": 20})
-                    ]
-                )
 
             steps: list[PlanStep] = []
 
@@ -100,6 +90,7 @@ class QueryPlanner:
                         },
                     )
                 )
+
             return ExecutionPlan(steps=steps)
 
         return ExecutionPlan(steps=[])
