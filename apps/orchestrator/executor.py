@@ -37,17 +37,36 @@ class ToolExecutor:
                 raw_result = await server.execute_tool(step.tool_name, arguments)
                 normalized_result = self._normalize_tool_result(raw_result)
 
-                self._update_context(
-                    arguments, step.tool_name, normalized_result, context
-                )
+                payload_success = True
+                payload_error: str | None = None
 
-                results.append(
-                    {
-                        "tool_name": step.tool_name,
-                        "success": True,
-                        "data": normalized_result,
-                    }
-                )
+                if isinstance(normalized_result, dict) and "success" in normalized_result:
+                    payload_success = bool(normalized_result.get("success"))
+                    payload_error = (
+                        str(normalized_result.get("error"))
+                        if normalized_result.get("error") is not None
+                        else None
+                    )
+
+                if payload_success:
+                    self._update_context(arguments, step.tool_name, normalized_result, context)
+                    results.append(
+                        {
+                            "tool_name": step.tool_name,
+                            "success": True,
+                            "data": normalized_result,
+                        }
+                    )
+                else:
+                    results.append(
+                        {
+                            "tool_name": step.tool_name,
+                            "success": False,
+                            "error": payload_error or "Tool returned success=false.",
+                            "data": normalized_result,
+                        }
+                    )
+
             except Exception as exc:
                 logger.exception("Tool '%s' execution failed.", step.tool_name)
                 results.append(
@@ -110,7 +129,6 @@ class ToolExecutor:
             return
 
         provider_name = str(arguments.get("provider_name", "")).strip().lower()
-
         if not provider_name:
             return
 

@@ -28,7 +28,21 @@ class ParsedPricingRecord(BaseModel):
     @field_validator("currency")
     @classmethod
     def normalize_currency(cls, value: str) -> str:
-        return value.strip().upper()
+        normalized = value.strip().upper()
+
+        symbol_map = {
+            "$": "USD",
+            "€": "EUR",
+            "£": "GBP",
+        }
+
+        if normalized in symbol_map:
+            return symbol_map[normalized]
+
+        if not normalized:
+            return "USD"
+
+        return normalized
 
     @field_validator("input_price_per_1m", "output_price_per_1m", mode="before")
     @classmethod
@@ -49,11 +63,7 @@ class ExtractionMetadata(BaseModel):
 
 
 class ParsingResult(BaseModel):
-    """Structured result returned by the parsing pipeline.
-
-    Backward-compatible sequence helpers are provided so legacy code/tests can use
-    len(result), iteration, and slicing directly on the result object.
-    """
+    """Structured result returned by the parsing pipeline."""
 
     records: list[ParsedPricingRecord] = Field(default_factory=list)
     metadata: ExtractionMetadata
@@ -70,7 +80,5 @@ class ParsingResult(BaseModel):
     @overload
     def __getitem__(self, index: slice) -> list[ParsedPricingRecord]: ...
 
-    def __getitem__(
-        self, index: int | slice
-    ) -> ParsedPricingRecord | list[ParsedPricingRecord]:
+    def __getitem__(self, index: int | slice) -> ParsedPricingRecord | list[ParsedPricingRecord]:
         return self.records[index]
